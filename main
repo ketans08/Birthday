@@ -1,0 +1,176 @@
+import time
+import numtoword
+import colors
+import ctypes as ct
+import datetime
+import happybirthday
+import threading
+
+
+def leap(year):
+    if year % 4 == 0:
+        return 29
+
+    return 28
+
+
+v = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+
+def count_year(year1, year2, num_ptr, num_month_ptr, num_year_ptr):
+    if year1 == year2:
+        return
+
+    v[1] = leap(year1)
+    for i in range(0, len(v)):
+        num_ptr.contents.value += v[i]
+        num_month_ptr.contents.value += 1
+
+    num_year_ptr.contents.value += 1
+    count_year(year1 + 1, year2, num_ptr, num_month_ptr, num_year_ptr)
+
+
+def count_month(year1, year2, month1, month2, date1, date2, num_ptr):
+    v[1] = leap(year1)
+
+    if date1 > v[month1 - 1] and date2 > v[month2]:
+        print("Invalid !!! \n Date Size Does Not Corresponding To That Month")
+        return
+    num_ptr.contents.value = num_ptr.contents.value + v[month1 - 1] - date1 + date2
+
+    for i in range(month1, 12):
+        num_ptr.contents.value += v[i]
+
+    v[1] = leap(year2)
+    for i in range(0, month2):
+        num_ptr.contents.value += v[i]
+
+    return
+
+
+def count_time(hr1, hr2, min1, min2, sec1, sec2, num_hr_ptr, num_min_ptr, num_sec_ptr):
+    num_hr_ptr.contents.value = hr2 + 24 - hr1
+    num_min_ptr.contents.value = (num_min_ptr.contents.value) * 60 + min2 + 60 - min1
+    num_sec_ptr.contents.value = (num_sec_ptr.contents.value) * 60 + sec2 + 60 - sec1
+
+
+print(colors.CGREEN2)
+ask1 = int(input("Default Date or Another Date(1/0): "))
+if ask1 == 1:
+    sec1 = 1
+    min1 = 1
+    hr1 = 1
+    date1 = 26
+    month1 = 6
+    year1 = 2015
+
+else:
+    ask2 = int(input("Do You Want to Enter Time Details(1/0):"))
+    if ask2 == 1:
+        sec1 = int(input("Enter Second: "))
+        min1 = int(input("Enter Minute: "))
+        hr1 = int(input("Enter Hour: "))
+    else:
+        sec1 = 1
+        min1 = 1
+        hr1 = 1
+    date1 = int(input("Enter Date: "))
+    month1 = int(input("Enter Month: "))
+    year1 = int(input("Enter Year: "))
+
+ask3 = int(input("Current Date or Another Date(1/0): "))
+if ask3 == 1:
+    current = datetime.datetime.now()
+    sec2 = int(current.second)
+    min2 = int(current.minute)
+    hr2 = int(current.hour)
+    date2 = int(current.day)
+    month2 = int(current.month)
+    year2 = int(current.year)
+
+else:
+    ask4 = int(input("Do You Want to Enter Time Details(1/0):"))
+    if ask4 == 1:
+        sec2 = int(input("Enter Second: "))
+        min2 = int(input("Enter Minute: "))
+        hr2 = int(input("Enter Hour: "))
+    else:
+        sec2 = 1
+        min2 = 1
+        hr2 = 1
+    date2 = int(input("Enter Date: "))
+    month2 = int(input("Enter Month: "))
+    year2 = int(input("Enter Year: "))
+
+num_sec = ct.c_int(0)
+num_min = ct.c_int(0)
+num_hr = ct.c_int(0)
+num = ct.c_int(0)
+num_month = ct.c_int(0)
+num_year = ct.c_int(0)
+
+num_sec_ptr = ct.pointer(num_sec)
+num_min_ptr = ct.pointer(num_min)
+num_hr_ptr = ct.pointer(num_hr)
+num_ptr = ct.pointer(num)
+num_month_ptr = ct.pointer(num_month)
+num_year_ptr = ct.pointer(num_year)
+
+count_year(year1 + 1, year2 - 1, num_ptr, num_month_ptr, num_year_ptr)
+count_month(year1, year2, month1, month2 - 1, date1, date2, num_ptr)
+count_time(hr1, hr2, min1 + 1, min2 - 1, sec1 + 1, sec2, num_hr_ptr, num_min_ptr, num_sec_ptr)
+
+if year2 > year1:
+    if month2 >= month1:
+        if month2 > month1:
+            num_year_ptr.contents.value += 1
+
+        elif month2 == month1:
+            if date2 >= date1:
+                num_year_ptr.contents.value += 1
+
+num_month_ptr.contents.value = num_month_ptr.contents.value + month2 - 1 + 12 - month1
+
+days = num.value
+
+
+def dates():
+    print(colors.yellow, "You Have Completed:")
+    time.sleep(1)
+    print("\n\n\t\t\t", colors.CVIOLET2, days * 24 * 60 * 60 + num_sec.value, "seconds", end=" \t\t\t")
+    numtoword.count(days * 24 * 60 * 60 + num_sec.value)
+    print("seconds")
+    time.sleep(2)
+    print("\n\n\t\t\t", colors.CBEIGE2, days * 24 * 60 + num_min.value, "minutes", end='\t\t\t\t')
+    numtoword.count(days * 24 * 60 + num_min.value)
+    print("minutes")
+    time.sleep(2)
+    print("\n\n\t\t\t", colors.CBLUE2, days * 24 + num_hr.value, "hours", end='\t\t\t\t\t')
+    numtoword.count(days * 24 + num_hr.value)
+    print("hours")
+    time.sleep(2)
+    print("\n\n\t\t\t", colors.CBLUE, days, "days", end='\t\t\t\t\t\t')
+    numtoword.count(days)
+    print("days")
+    time.sleep(2)
+    print("\n\n\t\t\t", colors.CBEIGE, num_month.value, "months", end="\t\t\t\t\t\t")
+    numtoword.count(num_month.value)
+    print("months")
+    time.sleep(2)
+    print("\n\n\t\t\t", colors.magenta, num_year.value + 1, "years", end="\t\t\t\t\t\t")
+    numtoword.count(num_year.value + 1)
+    print("years")
+    time.sleep(2)
+
+
+dates()
+a = input()
+time.sleep(4)
+print(colors.CBEIGE)
+if date1 == date2 and month1 == month2:
+    t1 = threading.Thread(target=happybirthday.task1)
+    t2 = threading.Thread(target=happybirthday.task2)
+
+    # starting threads
+    t2.start()
+    t1.start()
